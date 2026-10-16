@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drift — preview</title>
+<link rel="stylesheet" href="../style.css?v=10">
+<style>
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    padding: 26px;
+    box-sizing: border-box;
+    background: radial-gradient(130% 120% at 18% 0%, #2b2542 0%, #141120 55%, #0d0b15 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  #drift-window { position: static; transform: none; width: 900px; height: 560px; display: flex; }
+  .preview-note { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,.42); font: 12px var(--font); }
+</style>
+</head>
+<body>
+  <section class="window drift-window" id="drift-window" aria-label="Drift messages">
+    <div class="titlebar" id="drift-titlebar">
+      <div class="traffic">
+        <button type="button" class="tl close" aria-label="Close"></button>
+        <button type="button" class="tl min" aria-label="Minimize"></button>
+        <button type="button" class="tl max" aria-label="Zoom"></button>
+      </div>
+      <div class="drift-title"><strong>Drift</strong><span>Private messages</span></div>
+    </div>
+    <div class="win-body drift-body">
+      <aside class="drift-sidebar">
+        <div class="drift-account">
+          <span class="drift-avatar" id="drift-my-avatar" aria-hidden="true">D</span>
+          <div class="drift-account-copy"><span>Your Drift name</span><strong id="drift-my-name">iez123#0001</strong></div>
+        </div>
+        <form class="drift-username-form" id="drift-username-form" hidden>
+          <label for="drift-username">Username</label>
+          <div class="drift-inline-form"><span aria-hidden="true">@</span><input id="drift-username" type="text" value="iez123"><button type="submit">Save</button></div>
+          <small>3&ndash;24 letters, numbers, or underscores &mdash; you'll get the next free #tag</small>
+        </form>
+        <form class="drift-add-form" id="drift-add-form">
+          <label for="drift-friend-name">Add a friend</label>
+          <div class="drift-inline-form"><span aria-hidden="true">@</span><input id="drift-friend-name" type="text" placeholder="name#0001"><button type="submit" aria-label="Send friend request"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+        </form>
+        <div class="drift-list-heading"><span>MESSAGES</span><span>1</span></div>
+        <div class="drift-friends" id="drift-friends">
+          <div class="drift-friend-row active" data-friend-id="x" data-username="mira#0002">
+            <span class="drift-avatar">M</span>
+            <div class="drift-friend-meta"><strong>mira#0002</strong><span>Open conversation</span></div>
+          </div>
+        </div>
+        <div class="drift-sidebar-status" id="drift-status"></div>
+      </aside>
+      <main class="drift-main">
+        <section class="drift-chat" id="drift-chat">
+          <header class="drift-chat-head"><span class="drift-avatar friend" id="drift-chat-avatar" aria-hidden="true">M</span><div><strong id="drift-chat-name">mira#0002</strong><span>Private conversation</span></div></header>
+          <div class="drift-messages" id="drift-messages"></div>
+          <form class="drift-compose" id="drift-compose">
+            <textarea id="drift-message" rows="1" placeholder="Message&hellip; mira#0002" aria-label="Write a message"></textarea>
+            <div class="drift-tools">
+              <button type="button" class="drift-tool" id="drift-emoji-btn" aria-label="Add emoji" title="Emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 2 3.5 2 3.5-2 3.5-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg></button>
+              <button type="button" class="drift-tool drift-gif-label" id="drift-gif-btn" aria-label="Add GIF" title="GIFs by Klipy">GIF</button>
+            </div>
+          </form>
+          <p class="drift-security-note">Database access is limited to members of this accepted conversation.</p>
+        </section>
+      </main>
+    </div>
+  </section>
+  <p class="preview-note">Drift &mdash; title, bubbles and composer preview</p>
+
+<script>
+/* Same builders as the app, so this preview reflects the real classes. */
+const MY_ID = "me", THEM = "them";
+let driftLastDay = "";
+function driftDayText(d) { return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); }
+function driftBuildBubble(record, myId, pending) {
+  const date = new Date(record.created_at);
+  const bubble = document.createElement("div");
+  bubble.className = "drift-message" + (record.sender_id === myId ? " own" : "") + (pending ? " pending" : "");
+  const content = document.createElement("span");
+  content.textContent = record.body;
+  const time = document.createElement("time");
+  time.textContent = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  bubble.append(content, time);
+  return bubble;
+}
+function append(record, pending) {
+  const list = document.getElementById("drift-messages");
+  const day = driftDayText(new Date(record.created_at));
+  if (day !== driftLastDay) {
+    const label = document.createElement("div");
+    label.className = "drift-day";
+    label.textContent = day;
+    list.appendChild(label);
+    driftLastDay = day;
+  }
+  list.appendChild(driftBuildBubble(record, MY_ID, pending));
+}
+const now = Date.parse("2026-10-16T10:00:00Z");
+append({ sender_id: THEM, body: "hey, did you see the new shop redesign?", created_at: new Date(now).toISOString() });
+append({ sender_id: MY_ID, body: "yes! the logo animation on tab switch is nice", created_at: new Date(now + 60000).toISOString() });
+append({ sender_id: THEM, body: "agreed", created_at: new Date(now + 120000).toISOString() });
+append({ sender_id: MY_ID, body: "this one is still sending\u2026", created_at: new Date(now + 180000).toISOString() }, true);
+const failed = driftBuildBubble({ sender_id: MY_ID, body: "and this one failed", created_at: new Date(now + 240000).toISOString() }, MY_ID, false);
+failed.classList.add("failed");
+failed.querySelector("time").textContent = "Not sent";
+document.getElementById("drift-messages").appendChild(failed);
+document.getElementById("drift-messages").scrollTop = 99999;
+document.getElementById("drift-my-avatar").textContent = "I";
+document.getElementById("drift-chat-avatar").textContent = "M";
+</script>
+</body>
+</html>

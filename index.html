@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haze</title>
+  <meta name="description" content="Haze — your personal desktop on the web">
+  <meta name="theme-color" content="#1c1b22">
+  <link rel="icon" type="image/svg+xml" href="images/haze.svg">
+  <link rel="apple-touch-icon" href="images/haze.png">
+  <link rel="stylesheet" href="style.css?v=15">
+</head>
+<body>
+  <!-- Video wallpaper element -->
+  <video class="wallpaper-video" id="wallpaper-video" src="wallpaper.mp4" aria-hidden="true" loop muted playsinline preload="auto" tabindex="-1"></video>
+  <main class="stage">
+
+    <!-- Log in / Sign up -->
+    <section class="glass card" id="auth-view" aria-labelledby="auth-title">
+      <header class="card-head">
+        <div class="haze-brand"><img src="images/haze.svg" alt="Haze"></div>
+        <h1 id="auth-title">Welcome back</h1>
+        <p id="auth-sub">Log in to continue.</p>
+      </header>
+
+      <div class="segmented" id="mode-switch" data-mode="login" role="tablist" aria-label="Account">
+        <span class="thumb" aria-hidden="true"></span>
+        <button type="button" role="tab" id="tab-login" aria-selected="true" data-mode="login">Log in</button>
+        <button type="button" role="tab" id="tab-signup" aria-selected="false" data-mode="signup">Sign up</button>
+      </div>
+
+      <form id="auth-form" novalidate>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="password" name="password" autocomplete="current-password" placeholder="At least 8 characters" required>
+        </label>
+
+        <div class="reveal" data-only="signup" inert>
+          <div class="reveal-inner">
+            <label class="field">
+          <span>Confirm password</span>
+          <input type="password" id="confirm" name="confirm" autocomplete="new-password" placeholder="Re-enter your password">
+        </label>
+          </div>
+        </div>
+
+        <label class="remember">
+          <input type="checkbox" id="remember" checked>
+          <span class="box" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M2 6.5 4.8 9 10 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span>Keep me signed in</span>
+        </label>
+
+        <p class="message" id="message" role="alert" aria-live="polite"></p>
+
+        <button type="submit" class="primary" id="submit">Log in</button>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Desktop (signed in): wallpaper + dock only -->
+  <div class="desktop" id="desktop" hidden>
+    <div class="menubar" aria-label="Status">
+      <button type="button" class="menu-btn" id="spot-btn" aria-label="Search (Ctrl+K)"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      <span id="clock">--:--</span>
+      <span class="batt">
+        <span class="batt-shell" aria-hidden="true"><span class="batt-fill" id="batt-fill"></span></span>
+        <span id="batt-pct">100%</span>
+      </span>
+    </div>
+    <div class="desk-widgets" aria-label="Desktop widgets">
+      <div class="desk-clock" aria-hidden="true">
+        <div class="desk-time" id="desk-time">--:--</div>
+        <div class="desk-date" id="desk-date">&nbsp;</div>
+      </div>
+      <div class="desk-cal" id="desk-cal" hidden></div>
+    </div>
+    <nav class="dock" id="dock" aria-label="Apps">
+      <button type="button" class="app" data-app="Browsy" aria-label="Browsy"><span class="ico browsy" aria-hidden="true"><span class="browsy-art"><span class="browsy-dots"><i></i><i></i><i></i></span><span class="browsy-bar"></span></span></span><span class="tip" aria-hidden="true">Browsy</span></button>
+      <button type="button" class="app" data-app="Store" aria-label="Shop"><span class="ico" aria-hidden="true"><img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/App_Store_%28iOS%29.svg/256px-App_Store_%28iOS%29.svg.png" alt="" loading="lazy" onerror="this.outerHTML='🛍️'"></span><span class="tip" aria-hidden="true">Shop</span></button>
+      <button type="button" class="app" data-app="Games" aria-label="Games"><span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24"><path fill="#fff" d="M12 5.2c-3.75 0-6.25 1.2-7.15 3.45L3.1 15.6c-.66 2.3 1.42 3.9 3.02 2.48l2.72-2.32h6.32l2.72 2.32c1.6 1.42 3.68-.18 3.02-2.48l-1.75-6.95C18.25 6.4 15.75 5.2 12 5.2Z"/><path fill="rgba(0,0,0,0.34)" d="M6.7 10.3h1.9v2h2v1.9h-2v2H6.7v-2h-2v-1.9h2Z"/><circle cx="15.3" cy="11" r="1.35" fill="rgba(0,0,0,0.34)"/><circle cx="17.4" cy="13.3" r="1.35" fill="rgba(0,0,0,0.34)"/></svg></span><span class="tip" aria-hidden="true">Games</span></button>
+      <button type="button" class="app" data-app="Drift" aria-label="Drift"><span class="ico drift-ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.2a7.8 7.8 0 0 1-8 7.8 8.7 8.7 0 0 1-3.3-.6L4 20l1.5-3.6A7.4 7.4 0 0 1 4 11.2a7.8 7.8 0 0 1 8-7.7 7.8 7.8 0 0 1 8 7.7Z"/><path d="M8 11h8M8 14h5"/></svg></span><span class="tip" aria-hidden="true">Drift</span></button>
+      <button type="button" class="app" data-app="Indexy" aria-label="Indexy"><span class="ico indexy" aria-hidden="true"><span class="indexy-art"><span class="indexy-play"></span></span></span><span class="tip" aria-hidden="true">Indexy</span></button>
+      <button type="button" class="app" data-app="Settings" aria-label="Settings"><span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24"><path fill="#fff" fill-rule="evenodd" d="M19.1 12.9a7.7 7.7 0 0 0 0-1.8l2-1.6a.5.5 0 0 0 .1-.6l-1.9-3.3a.5.5 0 0 0-.6-.2l-2.4 1a7.6 7.6 0 0 0-1.6-.9l-.4-2.6a.5.5 0 0 0-.5-.4h-3.8a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.1.5-1.6.9l-2.4-1a.5.5 0 0 0-.6.2L2.7 9a.5.5 0 0 0 .1.6l2 1.6a7.7 7.7 0 0 0 0 1.8l-2 1.6a.5.5 0 0 0-.1.6l1.9 3.3c.1.2.4.3.6.2l2.4-1c.5.4 1 .7 1.6.9l.4 2.6c0 .2.2.4.5.4h3.8c.3 0 .5-.2.5-.4l.4-2.6c.6-.2 1.1-.5 1.6-.9l2.4 1c.2.1.5 0 .6-.2l1.9-3.3a.5.5 0 0 0-.1-.6ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg></span><span class="tip" aria-hidden="true">Settings</span></button>
+      <div class="sep" aria-hidden="true"></div>
+      <button type="button" class="app power" id="power-btn" data-app="Log out" aria-label="Log out"><span class="ico" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="12" y1="3.5" x2="12" y2="11"/><path d="M6.2 6.3a8 8 0 1 0 11.6 0"/></svg></span><span class="tip" aria-hidden="true">Log out</span></button>
+    </nav>
+    <section class="window" id="settings-window" hidden aria-label="Settings">
+      <div class="titlebar" id="settings-titlebar">
+        <div class="traffic">
+          <button type="button" class="tl close" id="set-close" aria-label="Close"></button>
+          <button type="button" class="tl min" id="set-min" aria-label="Minimize"></button>
+          <button type="button" class="tl max" id="set-max" aria-label="Zoom"></button>
+        </div>
+        <div class="title-search">
+          <div class="search-field settings-search-field">
+            <svg class="search-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="search" id="settings-search" placeholder="Search" aria-label="Search settings" autocomplete="off">
+            <span class="caret" id="search-caret" aria-hidden="true"></span>
+            <button type="button" class="search-clear" id="settings-search-clear" aria-label="Clear search" title="Clear search" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 4.5 7 7m0-7-7 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="win-body">
+        <aside class="side" aria-label="Categories">
+          <div class="profile">
+            <button type="button" class="avatar" id="profile-avatar" title="Change profile picture" aria-label="Change profile picture"><img src="images/Default-User-Icon.png" alt=""></button>
+            <div class="profile-text">
+              <div class="profile-name" id="profile-name">User</div>
+              <div class="profile-sub" id="profile-email">Local account</div>
+            </div>
+          </div>
+          <button type="button" class="side-item active" data-pane="general"><span class="side-ico blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h5m4 0h7M4 12h9m4 0h3M4 18h2m4 0h10"/><circle cx="11" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg></span>General</button>
+          <button type="button" class="side-item" data-pane="appearance"><span class="side-ico appearance" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="m5 17 4.5-4.5 3 3L15 13l4 4"/></svg></span>Appearance</button>
+          <button type="button" class="side-item" data-pane="proxy"><span class="side-ico blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c-5.6 5.6-5.6 11.4 0 17M12 3.5c5.6 5.6 5.6 11.4 0 17"/></svg></span>Proxy</button>
+          <button type="button" class="side-item" data-pane="info"><span class="side-ico green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 12.6h3.3l2.1-5.4 2.7 9.8 2.1-4.4h7.9"/></svg></span>Information</button>
+          <button type="button" class="side-item" data-pane="cloak"><span class="side-ico purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12s3.6-6.2 9-6.2c1.9 0 3.6.6 5 1.5M21 12s-3.6 6.2-9 6.2c-1.9 0-3.6-.6-5-1.5"/><line x1="4" y1="4" x2="20" y2="20"/></svg></span>Tab Cloak</button>
+          <button type="button" class="side-item" data-pane="account"><span class="side-ico grey" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>Account</button>
+          <button type="button" class="side-item" data-pane="links"><span class="side-ico teal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4.5 4.5 0 0 0 6.4.4l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.7 1.7"/><path d="M14 10.5a4.5 4.5 0 0 0-6.4-.4l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.7-1.7"/></svg></span>Links</button>
+        </aside>
+        <div class="pane">
+          <section class="pane-page active" data-pane="general">
+            <h2>General</h2>
+            <div class="group-label">Notifications</div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Session notifications</div><div class="row-sub">Show a notification when a session opens</div></div>
+                <button type="button" class="switch on" data-setting="sessionNotifications" role="switch" aria-checked="true" aria-label="Session notifications"><span class="knob"></span></button>
+              </div>
+            </div>
+            <div class="row-sub">Adjust the desktop clock, calendar, and other visual settings in Appearance.</div>
+          </section>
+          <section class="pane-page" data-pane="appearance">
+            <h2>Appearance</h2>
+            <div class="group-label">Wallpaper</div>
+            <div class="group">
+              <div class="row col">
+                <div>
+                  <div class="row-title">Wallpaper</div>
+                  <div class="row-sub">Pick a built-in background, or add your own photos</div>
+                </div>
+                <div class="wall-swatches" id="wall-swatches" role="group" aria-label="Built-in wallpapers"></div>
+                <div class="wall-drop" id="wall-drop" role="button" tabindex="0" aria-label="Add wallpaper images">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4.8"/><path d="M8.2 8.4 12 4.6l3.8 3.8"/><path d="M4.6 15.4v2.6a1.8 1.8 0 0 0 1.8 1.8h11.2a1.8 1.8 0 0 0 1.8-1.8v-2.6"/></svg>
+                  <span><strong>Drop photos here</strong> or <em>browse your files</em></span>
+                </div>
+                <div class="wall-thumbs" id="wall-thumbs"></div>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Dim wallpaper</div><div class="row-sub"><span id="dim-val">18</span>% darker for readability</div></div>
+                <input type="range" id="dim-slider" min="0" max="50" step="1" value="18" aria-label="Wallpaper dim level">
+              </div>
+            </div>
+            <div class="group-label">Dock</div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Icon size</div><div class="row-sub">Dock tile size &mdash; <span id="dock-size-val">42px</span></div></div>
+                <input type="range" id="dock-size" min="32" max="64" step="2" value="42" aria-label="Dock icon size">
+              </div>
+              <div class="row">
+                <div><div class="row-title">Position</div><div class="row-sub">Which screen edge the dock sticks to</div></div>
+                <div class="seg" id="dock-pos" role="group" aria-label="Dock position">
+                  <button type="button" data-pos="bottom" class="active">Bottom</button>
+                  <button type="button" data-pos="left">Left</button>
+                  <button type="button" data-pos="right">Right</button>
+                </div>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Separate Log out</div><div class="row-sub">Keep apps on the left and Log out on the right, divided by a line</div></div>
+                <button type="button" class="switch on" data-setting="separateLogout" role="switch" aria-checked="true" aria-label="Separate Log out in the dock"><span class="knob"></span></button>
+              </div>
+            </div>
+            <div class="group-label">App icons</div>
+            <div class="group">
+              <div class="row col">
+                <div>
+                  <div class="row-title">Icon style</div>
+                  <div class="row-sub">Switch the dock app icon pack &mdash; new packs appear in the Shop</div>
+                </div>
+                <div class="pack-row" id="pack-row" role="group" aria-label="Icon packs"></div>
+              </div>
+            </div>
+            <div class="group-label">Desktop widgets</div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Show time</div><div class="row-sub">Display the clock on the desktop</div></div>
+                <button type="button" class="switch on" data-setting="showDeskTime" role="switch" aria-checked="true" aria-label="Show desktop time"><span class="knob"></span></button>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Show date</div><div class="row-sub">Display the date below the clock</div></div>
+                <button type="button" class="switch on" data-setting="showDeskDate" role="switch" aria-checked="true" aria-label="Show desktop date"><span class="knob"></span></button>
+              </div>
+              <div class="row">
+                <div><div class="row-title">24-hour clock</div><div class="row-sub">Use 24-hour time instead of AM/PM</div></div>
+                <button type="button" class="switch" data-setting="clock24" role="switch" aria-checked="false" aria-label="24-hour clock"><span class="knob"></span></button>
+              </div>
+              <div class="row">
+                <label class="cloak-field" for="desk-date-format"><span>Date format</span>
+                  <select class="proxy-select" id="desk-date-format" aria-label="Desktop date format">
+                    <option value="long">Sunday, October 11</option>
+                    <option value="short">Sun, Oct 11</option>
+                  </select>
+                </label>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Google Calendar</div><div class="row-sub">Show upcoming events on the desktop</div></div>
+                <button type="button" class="switch" data-setting="showCalendar" role="switch" aria-checked="false" aria-label="Show Google Calendar"><span class="knob"></span></button>
+              </div>
+            </div>
+            <div class="group-label">Display</div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Interface animations</div><div class="row-sub">Enable transitions and motion effects</div></div>
+                <button type="button" class="switch on" data-setting="animations" role="switch" aria-checked="true" aria-label="Interface animations"><span class="knob"></span></button>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Settings accent</div><div class="row-sub">Choose the highlight color used in Settings</div></div>
+                <div class="seg" id="settings-accent" role="group" aria-label="Settings accent color">
+                  <button type="button" data-accent="purple" class="active">Purple</button>
+                  <button type="button" data-accent="white">White</button>
+                </div>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Settings UI scale</div><div class="row-sub">Zoom this window's contents &mdash; <span id="scale-val">95%</span></div></div>
+                <input type="range" id="ui-scale" min="80" max="130" step="5" value="95" aria-label="Settings UI scale">
+              </div>
+              <div class="row">
+                <div><div class="row-title">Window top bar size</div><div class="row-sub">Height of the title bar in every app &mdash; <span id="titlebar-val">44px</span></div></div>
+                <input type="range" id="titlebar-size" min="40" max="80" step="2" value="44" aria-label="Window top bar size">
+              </div>
+              <div class="row">
+                <div><div class="row-title">Magnification</div><div class="row-sub">Zoom dock icons near the cursor</div></div>
+                <button type="button" class="switch on" data-setting="magnify" role="switch" aria-checked="true" aria-label="Dock magnification"><span class="knob"></span></button>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Running indicators</div><div class="row-sub">Show a dot under open apps</div></div>
+                <button type="button" class="switch on" data-setting="indicators" role="switch" aria-checked="true" aria-label="Running indicators"><span class="knob"></span></button>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Reset desktop layout</div><div class="row-sub">Return the clock and calendar to the upper-left corner</div></div>
+                <button type="button" class="player-btn" id="layout-reset">Reset layout</button>
+              </div>
+            </div>
+          </section>
+          <section class="pane-page" data-pane="proxy">
+            <h2>Proxy</h2>
+            <div class="group-label">Mode</div>
+            <div class="group">
+              <div class="proxy-modes" role="radiogroup" aria-label="Proxy mode">
+                <button type="button" class="proxy-mode" data-mode="epoxy" role="radio" aria-checked="false">
+                  <strong>Epoxy</strong>
+                  <span>Encrypted Wisp transport (epoxy-tls). Browsy loads pages through the endpoint below.</span>
+                </button>
+                <button type="button" class="proxy-mode" data-mode="local" role="radio" aria-checked="true">
+                  <strong>Local Search / Iframe</strong>
+                  <span>Standard direct iframe view — the classic Browsy behavior.</span>
+                </button>
+              </div>
+            </div>
+            <div class="group-label">Browsing</div>
+            <div class="group">
+              <div class="row col">
+                <label class="cloak-field"><span>Search engine</span><select class="proxy-select" id="proxy-search-engine" aria-label="Search engine"><option value="duckduckgo">DuckDuckGo (default)</option><option value="google">Google</option><option value="brave">Brave</option></select></label>
+                <label class="cloak-field"><span>User agent</span><select class="proxy-select" id="proxy-user-agent" aria-label="User agent"><option value="default">Current browser</option><option value="iphone">iPhone Safari</option><option value="ipad">iPad Safari</option><option value="android">Android Chrome</option><option value="ps5">PlayStation 5</option></select></label>
+                <div class="row-sub">User agent applies to Epoxy requests. Mobile presets also use a narrow page viewport.</div>
+              </div>
+            </div>
+            <div class="group-label">Endpoint</div>
+            <div class="group">
+              <div class="row col">
+                <label class="cloak-field"><span>Wisp server <em>(Epoxy mode only)</em></span><input type="url" id="proxy-wisp" placeholder="wss://…" autocomplete="off" spellcheck="false"></label>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Status</div><div class="row-sub" id="proxy-status">Local iframe mode</div></div>
+                <button type="button" class="player-btn" id="proxy-test">Test Epoxy</button>
+              </div>
+            </div>
+          </section>
+          <section class="pane-page" data-pane="info">
+            <h2>Information</h2>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Live ping</div><div class="row-sub">Round-trip time to <span id="ping-host">this page</span></div></div>
+                <div class="ping-big"><span class="ping-live" aria-hidden="true"></span><span id="ping-value">--</span><span class="ping-unit">ms</span></div>
+              </div>
+              <div class="row">
+                <div class="row-title">Quality</div>
+                <strong class="net-val" id="ping-quality">&mdash;</strong>
+              </div>
+              <div class="row">
+                <div class="row-title">Page load (TTFB)</div>
+                <strong class="net-val" id="net-ttfb">&mdash;</strong>
+              </div>
+            </div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Battery</div><div class="row-sub" id="batt-state">Checking&hellip;</div></div>
+                <div class="ping-big"><span id="batt-pct-widget">--</span><span class="ping-unit">%</span></div>
+              </div>
+              <div class="row">
+                <div class="batt-meter" id="batt-meter" role="img" aria-label="Battery level"><i id="batt-fill-widget"></i></div>
+              </div>
+            </div>
+            <div class="group">
+              <div class="row">
+                <div class="row-title">Network status</div>
+                <strong class="net-val" id="net-status">&mdash;</strong>
+              </div>
+              <div class="row">
+                <div class="row-title">Connection type</div>
+                <strong class="net-val" id="net-type">&mdash;</strong>
+              </div>
+              <div class="row">
+                <div class="row-title">Downlink</div>
+                <strong class="net-val" id="net-downlink">&mdash;</strong>
+              </div>
+              <div class="row">
+                <div class="row-title">Browser RTT</div>
+                <strong class="net-val" id="net-rtt">&mdash;</strong>
+              </div>
+              <div class="row">
+                <div class="row-title">Page address</div>
+                <strong class="net-val ellipsis" id="net-page">&mdash;</strong>
+              </div>
+            </div>
+          </section>
+          <section class="pane-page" data-pane="account">
+            <h2>Account</h2>
+            <div class="group account-group">
+              <div class="row">
+                <div><div class="row-title" id="account-name">User</div><div class="row-sub" id="account-email">you@example.com</div></div>
+                <span class="avatar small" id="account-avatar" aria-hidden="true"><img src="images/Default-User-Icon.png" alt=""></span>
+              </div>
+              <div class="row">
+                <div><div class="row-title">Profile picture</div><div class="row-sub">Shown in Settings and next to your reviews</div></div>
+                <span class="row-actions">
+                  <button type="button" class="player-btn" id="avatar-change">Change&hellip;</button>
+                  <button type="button" class="player-btn" id="avatar-remove">Remove</button>
+                </span>
+              </div>
+              <input type="file" id="avatar-input" accept="image/*" hidden>
+              <div id="profile-banner" class="profile-banner" hidden></div>
+              <div class="row">
+                <div><div class="row-title">Profile banner</div><div class="row-sub">Shown at the top of your profile</div></div>
+                <span class="row-actions">
+                  <button type="button" class="player-btn" id="banner-change">Change&hellip;</button>
+                  <button type="button" class="player-btn" id="banner-remove" hidden>Remove</button>
+                </span>
+              </div>
+              <input type="file" id="banner-input" accept="image/*" hidden>
+              <div class="row">
+                <div><div class="row-title">Stay signed in</div><div class="row-sub" id="stay-sub">Auto sign-in is on</div></div>
+                <button type="button" class="switch on" data-setting="stay" role="switch" aria-checked="true" aria-label="Stay signed in"><span class="knob"></span></button>
+              </div>
+            </div>
+            <div class="group-label">Game Data</div>
+            <div class="group game-data-group">
+              <div class="row">
+                <div>
+                  <div class="row-title">Automatic game sync</div>
+                  <div class="row-sub">Save favorites, recent games, reviews, and supported game progress to this account.</div>
+                  <div class="game-data-status" id="game-data-status" role="status" aria-live="polite">Preparing account data…</div>
+                </div>
+                <svg class="game-data-cloud" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 18.5h9.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5 11.6a3.5 3.5 0 0 0 2.5 6.9Z"/><path d="m9 14 3-3 3 3M12 11v7"/></svg>
+              </div>
+            </div>
+            <button type="button" class="signout" id="signout-btn">Sign Out…</button>
+          </section>
+          <section class="pane-page" data-pane="links">
+            <h2>Links</h2>
+            <div class="group-label">Connected services</div>
+            <div class="group" id="links-group">
+              <div class="row">
+                <div><div class="row-title">Loading integrations…</div></div>
+              </div>
+            </div>
+          </section>
+          <section class="pane-page" data-pane="cloak">
+            <h2>Tab Cloak</h2>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Tab cloak</div><div class="row-sub" id="cloak-status">Turn on to change this tab's name and logo</div></div>
+                <button type="button" class="switch" id="cloak-enabled" role="switch" aria-checked="false" aria-label="Tab cloak"><span class="knob"></span></button>
+              </div>
+            </div>
+            <div class="group-label">Panic key</div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Keybind</div><div class="row-sub">Press it anywhere to escape to your panic site instantly</div></div>
+                <button type="button" class="player-btn" id="cloak-key">Set keybind</button>
+              </div>
+            </div>
+            <div class="group-label">Disguise</div>
+            <div class="group">
+              <div class="row">
+                <div><div class="row-title">Preset</div><div class="row-sub">A cover identity for the tab</div></div>
+                <select id="cloak-preset" aria-label="Cloak preset">
+                  <option value="google">Google</option>
+                  <option value="docs">Google Docs</option>
+                  <option value="drive">Google Drive</option>
+                  <option value="classroom">Google Classroom</option>
+                  <option value="blank">Blank</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div class="row col">
+                <label class="cloak-field"><span>Tab title</span><input type="text" id="cloak-title" maxlength="120" autocomplete="off" spellcheck="false"></label>
+                <label class="cloak-field"><span>Favicon image URL <em>(optional — overrides the preset icon)</em></span><input type="url" id="cloak-icon" placeholder="https://…" autocomplete="off" spellcheck="false"></label>
+                <label class="cloak-field"><span>Panic website <em>(optional — the key opens this instead of cloaking)</em></span><input type="url" id="cloak-url" placeholder="https://…" autocomplete="off" spellcheck="false"></label>
+              </div>
+              <div class="row">
+                <div class="cloak-preview" aria-hidden="true"><img id="cloak-preview-icon" alt="" width="16" height="16"><span id="cloak-preview-title">Google</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+    <div class="game-data-modal" id="game-data-modal" hidden>
+      <button type="button" class="game-data-backdrop" data-game-data-close aria-label="Close saved game data"></button>
+      <section class="game-data-dialog" role="dialog" aria-modal="true" aria-labelledby="game-data-dialog-title">
+        <header class="game-data-dialog-head">
+          <div>
+            <span class="game-data-eyebrow">ACCOUNT DATA</span>
+            <h2 id="game-data-dialog-title">Your game saves</h2>
+            <p>Progress and activity saved to your account.</p>
+          </div>
+          <button type="button" class="game-data-close" id="game-data-modal-close" aria-label="Close saved game data">×</button>
+        </header>
+        <div class="game-data-overview">
+          <div class="game-data-overview-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 4.75h11.5L20 8.3v10.95a.75.75 0 0 1-.75.75H5a1 1 0 0 1-1-1v-13.25a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.75v5h8v-5M8 20v-6.25h8V20" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="game-data-overview-copy">
+            <strong id="game-data-summary-count">Checking saved games…</strong>
+            <span id="game-data-dialog-summary">Your game activity is kept with your account.</span>
+          </div>
+        </div>
+        <div class="game-data-list-head">
+          <div><h3>Games</h3><span id="game-data-list-count">All games</span></div>
+          <div class="game-data-filters" role="group" aria-label="Filter games">
+            <button type="button" class="game-data-filter is-active" data-game-data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="game-data-filter" data-game-data-filter="saved" aria-pressed="false">With data</button>
+          </div>
+        </div>
+        <div class="game-data-list" id="game-data-list"></div>
+      </section>
+    </div>
+    <section class="window browsy-win" id="browsy-window" hidden aria-label="Browsy">
+      <div class="titlebar" id="browsy-titlebar">
+        <div class="traffic">
+          <button type="button" class="tl close" id="br-close" aria-label="Close"></button>
+          <button type="button" class="tl min" id="br-min" aria-label="Minimize"></button>
+          <button type="button" class="tl max" id="br-max" aria-label="Zoom"></button>
+        </div>
+        <div class="browser-bar">
+          <button type="button" class="nav-btn" id="br-back" aria-label="Back"><img src="images/arrow_back_ios_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png" alt=""></button>
+          <button type="button" class="nav-btn" id="br-fwd" aria-label="Forward"><img src="images/arrow_forward_ios_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png" alt=""></button>
+          <button type="button" class="nav-btn" id="br-reload" aria-label="Reload"><img src="images/refresh_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png" alt=""></button>
+          <button type="button" class="nav-btn" id="br-home" aria-label="Home"><img src="images/home_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png" alt=""></button>
+          <label class="url-field">
+            <svg class="search-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="text" id="br-url" placeholder="Search or enter address" aria-label="Address" autocomplete="off" spellcheck="false">
+          </label>
+          <button type="button" class="nav-btn" id="br-external" aria-label="Open in new tab">↗</button>
+        </div>
+      </div>
+      <div class="win-body">
+        <div class="browser-view">
+          <div class="start-page" id="br-start">
+            <div class="start-logo" aria-hidden="true"><span class="browsy-art big"><span class="browsy-dots"><i></i><i></i><i></i></span><span class="browsy-bar"></span></span></div>
+            <h2>Browsy</h2>
+            <p>Type an address above to browse. Some sites refuse to load inside other pages.</p>
+            <div class="quick-tiles">
+              <button type="button" class="tile" data-url="https://example.com"><span class="tile-ico" aria-hidden="true">🌐</span>Example</button>
+              <button type="button" class="tile" data-url="https://www.openstreetmap.org/export/embed.html?bbox=-0.1357%2C51.4975%2C-0.0957%2C51.5175&amp;layer=mapnik"><span class="tile-ico" aria-hidden="true">🗺️</span>Maps</button>
+              <button type="button" class="tile" data-url="https://en.wikipedia.org/wiki/Main_Page"><span class="tile-ico" aria-hidden="true">📖</span>Wikipedia</button>
+            </div>
+          </div>
+          <iframe class="page-frame" id="br-frame" title="Web page" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen hidden></iframe>
+          <div class="br-error" id="br-error" hidden>
+            <strong id="br-error-title">Couldn't load this page</strong>
+            <span id="br-error-msg"></span>
+            <div class="br-error-actions">
+              <button type="button" class="player-btn" id="br-error-retry">Retry</button>
+              <button type="button" class="player-btn" id="br-error-direct">Open directly</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="window games-win" id="games-window" hidden aria-label="Games">
+      <div class="titlebar" id="games-titlebar">
+        <div class="traffic">
+          <button type="button" class="tl close" id="gm-close" aria-label="Close"></button>
+          <button type="button" class="tl min" id="gm-min" aria-label="Minimize"></button>
+          <button type="button" class="tl max" id="gm-max" aria-label="Zoom"></button>
+        </div>
+      </div>
+      <div class="win-body games-body">
+        <div class="games-lib" id="games-lib">
+          <div class="games-head">
+            <div class="games-head-top">
+              <div class="games-heading">
+                <h2 class="games-title">Games</h2>
+                <p class="games-sub" id="games-count" aria-live="polite"></p>
+              </div>
+              <div class="games-head-actions">
+                <div class="games-sort" role="group" aria-label="Game library view">
+                  <button type="button" class="games-sort-btn active" data-sort="home" aria-pressed="true">Home</button>
+                  <button type="button" class="games-sort-btn" data-sort="recent" aria-pressed="false">Recently played</button>
+                  <button type="button" class="games-sort-btn" data-sort="favorites" aria-pressed="false">Favorites</button>
+                </div>
+                <label class="search-field" id="games-search-field">
+                  <svg class="search-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                  <input type="search" id="games-search" placeholder="Search games" aria-label="Search games" autocomplete="off">
+                  <span class="caret" id="games-search-caret" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="games-scroll" id="games-scroll"></div>
+        </div>
+        <div class="games-detail" id="games-detail" hidden>
+          <div class="player-bar">
+            <button type="button" class="player-btn" id="detail-back">Back</button>
+            <div class="player-title"><strong id="detail-title">Game</strong></div>
+          </div>
+          <div class="detail-scroll">
+            <div class="detail-top">
+              <div class="detail-hero" id="detail-hero">
+                <span class="cover-fallback" id="detail-fallback"><b id="detail-letter">G</b><span id="detail-console">NES</span></span>
+                <img id="detail-cover" alt="" hidden>
+                <button type="button" class="detail-bigplay" id="detail-bigplay" aria-label="Play preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg></button>
+                <iframe id="detail-trailer" title="Game trailer" allow="autoplay; fullscreen" hidden></iframe>
+              </div>
+              <div class="detail-side">
+                <div class="detail-stars"><span class="game-stars">★</span><strong id="detail-rating">5.0</strong><span aria-hidden="true">·</span><span id="detail-type">Playable in browser</span></div>
+                <p class="detail-blurb" id="detail-blurb"></p>
+                <div class="detail-controls"><span>How to play</span><p id="detail-hint"></p></div>
+                <div class="emu-card" id="emu-card">
+                  <div class="emu-info"><span class="emu-label">Controls</span><strong>WASD keys</strong><span>Use W A S D instead of the arrow keys. Off by default.</span></div>
+                  <button type="button" class="emu-toggle" id="detail-emu-toggle" aria-pressed="false" aria-label="Use WASD keys instead of arrow keys"><span class="emu-knob" aria-hidden="true"></span></button>
+                </div>
+              </div>
+            </div>
+            <div class="reviews" id="reviews">
+              <div class="reviews-head"><h3>Player reviews</h3><span id="rev-count" aria-live="polite"></span></div>
+              <div class="rev-summary"><span class="rev-avg" id="rev-avg">4.9</span><span class="game-stars" aria-hidden="true">&#9733;</span><span class="rev-sub" id="rev-sub"></span></div>
+              <div class="rev-filter-note">Spam &amp; bot reviews are filtered automatically.</div>
+              <div class="rev-list" id="rev-list"></div>
+              <form class="rev-form" id="rev-form">
+                <div class="rev-stars" id="rev-stars" role="radiogroup" aria-label="Your rating"></div>
+                <textarea id="rev-text" maxlength="500" placeholder="Share what you thought of this game&hellip;" rows="2" aria-label="Your review"></textarea>
+                <div class="rev-form-row"><span class="rev-msg" id="rev-msg" aria-live="polite"></span><span class="rev-count-num" id="rev-count-num">0 / 500</span><button type="submit" class="player-btn transport-play">Post review</button></div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="games-player" id="games-player" hidden>
+          <div class="player-hotzone" aria-hidden="true"></div>
+          <div class="player-handle" aria-hidden="true"></div>
+          <div class="player-bar" id="player-bar">
+            <div class="player-bar-side">
+              <button type="button" class="player-btn icon" id="game-back" aria-label="Back to games" title="Back to games"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg></button>
+              <button type="button" class="player-btn icon" id="game-refresh" aria-label="Refresh game" title="Refresh game"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+              <div class="player-vol" title="Game volume">
+                <input type="range" id="game-vol" min="0" max="100" value="100" step="1" aria-label="Game volume">
+              </div>
+            </div>
+            <div class="player-title"><strong id="game-title">Game</strong></div>
+            <div class="player-bar-side right">
+              <button type="button" class="player-btn" id="game-emu" aria-pressed="false" title="Use WASD keys instead of arrow keys">WASD: Off</button>
+              <button type="button" class="player-btn icon" id="game-fullscreen" aria-label="Fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+            </div>
+          </div>
+          <div class="player-frame" id="player-frame">
+            <div class="player-loading" id="player-loading"><span class="spinner" aria-hidden="true"></span>Loading&hellip;</div>
+            <iframe id="game-frame" title="Game player" allow="accelerometer; autoplay; encrypted-media; fullscreen; gamepad; gyroscope; microphone; midi; picture-in-picture; publickey-credentials-get; web-share; clipboard-read; clipboard-write" referrerpolicy="no-referrer"></iframe>
+            <div class="player-fallback" id="player-fallback" hidden>
+              <strong>This game isn't loading here</strong>
+              <span>Some games refuse to run inside other pages. You can still play it in its own tab.</span>
+              <div class="player-fallback-actions">
+                <a class="player-btn" id="game-external" href="#" target="_blank" rel="noopener">Open in new tab &#8599;</a>
+                <button type="button" class="player-btn" id="game-fallback-back">&#8592; Games</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="window drift-window" id="drift-window" hidden aria-label="Drift messages">
+      <div class="titlebar" id="drift-titlebar">
+        <div class="traffic">
+          <button type="button" class="tl close" id="drift-close" aria-label="Close"></button>
+          <button type="button" class="tl min" id="drift-min" aria-label="Minimize"></button>
+          <button type="button" class="tl max" id="drift-max" aria-label="Zoom"></button>
+        </div>
+        <div class="drift-title"><strong>Drift</strong><span>Private messages</span></div>
+      </div>
+      <div class="win-body drift-body">
+        <aside class="drift-sidebar">
+          <div class="drift-account">
+            <span class="drift-avatar" id="drift-my-avatar" aria-hidden="true">D</span>
+            <div class="drift-account-copy"><span>Your Drift name</span><strong id="drift-my-name">Not connected</strong></div>
+          </div>
+          <form class="drift-username-form" id="drift-username-form" hidden>
+            <label for="drift-username">Username</label>
+            <div class="drift-inline-form"><span aria-hidden="true">@</span><input id="drift-username" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="off" spellcheck="false" placeholder="yourname" required><button type="submit" aria-label="Save username">Save</button></div>
+            <small>3–24 letters, numbers, or underscores — you'll get the next free #tag</small>
+          </form>
+          <form class="drift-add-form" id="drift-add-form">
+            <label for="drift-friend-name">Add a friend</label>
+            <div class="drift-inline-form"><span aria-hidden="true">@</span><input id="drift-friend-name" type="text" maxlength="29" autocomplete="off" spellcheck="false" placeholder="name#0001" required><button type="submit" aria-label="Send friend request"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button></div>
+          </form>
+          <div class="drift-list-heading"><span>MESSAGES</span><span id="drift-friend-count"></span></div>
+          <div class="drift-friends" id="drift-friends" aria-label="Friends"></div>
+          <div class="drift-sidebar-status" id="drift-status" role="status" aria-live="polite"></div>
+        </aside>
+        <main class="drift-main">
+          <div class="drift-connection-note" id="drift-cloud-required" hidden>
+            <div class="drift-note-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .4-8A6 6 0 0 0 6 9.4 4.3 4.3 0 0 0 7 18Z"/><path d="M12 11v5m0-8v.1"/></svg></div>
+            <h2>Connect Drift to your account</h2>
+            <p>Private messages need a signed-in cloud account. Connect Supabase and run the Drift section in <code>supabase-setup.sql</code> to enable tags, friend requests, and chats.</p>
+          </div>
+          <section class="drift-chat" id="drift-chat" aria-label="Conversation" hidden>
+            <header class="drift-chat-head"><span class="drift-avatar friend" id="drift-chat-avatar" aria-hidden="true">D</span><div><strong id="drift-chat-name">Friend</strong><span>Private conversation</span></div></header>
+            <div class="drift-messages" id="drift-messages" role="log" aria-live="polite" aria-relevant="additions text"></div>
+            <form class="drift-compose" id="drift-compose"><textarea id="drift-message" rows="1" maxlength="4000" placeholder="Message…" aria-label="Write a message" required></textarea><div class="drift-tools"><button type="button" class="drift-tool" id="drift-emoji-btn" aria-label="Add emoji" title="Emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 2 3.5 2 3.5-2 3.5-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg></button><button type="button" class="drift-tool drift-gif-label" id="drift-gif-btn" aria-label="Add GIF" title="GIFs by Klipy">GIF</button></div><div class="drift-suggest" id="drift-suggest" hidden></div><div class="drift-pop" id="drift-emoji-pop" hidden><input id="drift-emoji-search" type="search" placeholder="Search emoji" aria-label="Search emoji" autocomplete="off"><div class="drift-emoji-grid" id="drift-emoji-grid" role="listbox" aria-label="Emoji"></div><div class="drift-pop-foot">Emoji by <a href="https://twemoji.twitter.com" target="_blank" rel="noopener">Twemoji</a></div></div><div class="drift-pop" id="drift-gif-pop" hidden><input id="drift-gif-search" type="search" placeholder="Search GIFs" aria-label="Search GIFs" autocomplete="off"><div class="drift-gif-grid" id="drift-gif-grid" aria-label="GIFs"></div><div class="drift-pop-foot">GIFs by <a href="https://klipy.com" target="_blank" rel="noopener">Klipy</a></div></div></form>
+            <p class="drift-security-note">Database access is limited to members of this accepted conversation.</p>
+          </section>
+        </main>
+      </div>
+    </section>
+    <section class="window store-win" id="store-window" hidden aria-label="Shop">
+      <div class="titlebar" id="store-titlebar">
+        <div class="traffic">
+          <button type="button" class="tl close" id="st-close" aria-label="Close"></button>
+          <button type="button" class="tl min" id="st-min" aria-label="Minimize"></button>
+          <button type="button" class="tl max" id="st-max" aria-label="Zoom"></button>
+        </div>
+        <div class="store-head">
+          <strong>Shop</strong>
+          <span id="st-status">Wallpapers</span>
+        </div>
+      </div>
+      <div class="win-body store-body">
+        <aside class="store-side" aria-label="Shop sections">
+          <div class="store-brand">
+            <img class="store-brand-mark" src="images/haze.svg" alt="" aria-hidden="true">
+            <span class="store-brand-text"><strong>Haze</strong><em>Shop</em></span>
+          </div>
+          <p class="store-nav-label">Browse</p>
+          <button type="button" class="store-nav active" data-view="appearance"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17.5 9.5 12.5l3.5 3.5 2.5-2.5 4 4"/></svg>Appearance</button>
+          <button type="button" class="store-nav" data-view="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9Z"/></svg>Community Favorites</button>
+          <button type="button" class="store-nav" data-view="decorations"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.1 5.7L20 11l-5.9 2.3L12 19l-2.1-5.7L4 11l5.9-2.3L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg>Avatar Decorations</button>
+          <p class="store-nav-label">Contribute</p>
+          <button type="button" class="store-nav" data-view="upload"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M4 20h16"/></svg>Upload</button>
+          <button type="button" class="store-nav admin-only" data-view="admin" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6Z"/><path d="M9.5 12l2 2 3.5-4"/></svg>Admin</button>
+          <p class="store-side-foot">Uploads are scanned and reviewed before they appear in the Shop.</p>
+        </aside>
+        <div class="store-main">
+          <div class="store-toolbar" id="st-toolbar">
+            <label class="search-field" id="st-search-field">
+              <svg class="search-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <input type="search" id="st-search" placeholder="Search wallpapers" aria-label="Search wallpapers" autocomplete="off">
+              <span class="caret" id="st-search-caret" aria-hidden="true"></span>
+            </label>
+          </div>
+          <div class="store-view" id="st-view-appearance">
+            <div class="store-section-head"><h3>Icon packs</h3></div>
+            <p class="store-hint">Install a pack to restyle the dock app icons.</p>
+            <div class="pack-row store-packs" id="st-pack-row"></div>
+            <div class="store-section-head wall-head"><h3>Wallpapers</h3></div>
+            <div class="store-grid" id="st-grid"></div>
+            <div class="store-empty" id="st-empty" hidden>
+              <strong>No wallpapers found</strong>
+              <span>Try a different search, or upload the first one.</span>
+            </div>
+          </div>
+          <div class="store-view" id="st-view-favorites" hidden>
+            <div class="store-section-head"><h3>Community Favorites</h3><span id="st-fav-count"></span></div>
+            <p class="store-hint">Top community wallpapers, ranked by likes.</p>
+            <div class="store-grid" id="st-grid-fav"></div>
+            <div class="store-empty" id="st-empty-fav" hidden>
+              <strong>No favorites yet</strong>
+              <span>Be the first to like a wallpaper.</span>
+            </div>
+          </div>
+          <div class="store-view" id="st-view-decorations" hidden>
+            <div class="deco-heading">
+              <div><h2>Avatar decorations</h2><p>Give your profile a little extra character.</p></div>
+              <div class="mist-balance" aria-label="Your Mist balance"><strong id="st-mist-balance">…</strong><span>Mist</span></div>
+            </div>
+            <p class="mist-help" id="st-mist-help" hidden>Wallets need the latest Shop database setup. Run the updated <code>supabase-setup.sql</code> in Supabase, then reload.</p>
+            <div class="decoration-grid" id="st-decoration-grid"></div>
+            <div class="store-empty" id="st-decoration-empty" hidden>
+              <strong>No decorations found</strong><span>Check back for new styles.</span>
+            </div>
+          </div>
+          <div class="store-view" id="st-view-upload" hidden>
+            <h2>Share a wallpaper</h2>
+            <p class="store-note">Images are scanned automatically for inappropriate content. Videos and flagged uploads go to an admin for review before they appear in the Shop.</p>
+            <label class="field">
+              <span>Name</span>
+              <input type="text" id="st-up-name" placeholder="e.g. Sunset over the hills" maxlength="60" autocomplete="off">
+            </label>
+            <div class="wall-drop" id="st-up-drop" role="button" tabindex="0" aria-label="Choose a wallpaper file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4.8"/><path d="M8.2 8.4 12 4.6l3.8 3.8"/><path d="M4.6 15.4v2.6a1.8 1.8 0 0 0 1.8 1.8h11.2a1.8 1.8 0 0 0 1.8-1.8v-2.6"/></svg>
+              <span><strong>Drop an image or video here</strong> or <em>browse your files</em></span>
+            </div>
+            <input type="file" id="st-up-file" accept="image/*,video/*" hidden>
+            <div class="store-preview" id="st-up-preview" hidden>
+              <img id="st-up-img" alt="Upload preview" hidden>
+              <video id="st-up-video" muted playsinline preload="metadata" hidden></video>
+              <div class="store-preview-meta"><strong id="st-up-filename">file</strong><span id="st-up-filesize"></span></div>
+            </div>
+            <p class="store-scan" id="st-up-scan" role="status" aria-live="polite" hidden></p>
+            <button type="button" class="player-btn transport-play" id="st-up-submit">Upload</button>
+          </div>
+          <div class="store-view" id="st-view-admin" hidden>
+            <h2>Gift a member</h2>
+            <p class="store-hint">Send Mist or Blossom. Gifts arrive the next time the member signs in.</p>
+            <div class="mist-admin-section">
+              <div class="mist-admin-form">
+                <label class="mist-admin-field member-field"><span>Member</span><select id="st-mist-member" aria-label="Select a member"></select></label>
+                <label class="mist-admin-field gift-type-field"><span>Gift</span><select id="st-gift-type" aria-label="Gift type"><option value="mist">Mist</option><option value="blossom">Blossom</option></select></label>
+                <label class="mist-admin-field amount-field" id="st-gift-amount-field"><span>Amount <span class="mist-unit">Mist</span></span><input type="number" id="st-mist-amount" min="1" max="100000" step="1" value="100" inputmode="numeric"></label>
+                <button type="button" class="store-btn mist-credit-btn" id="st-mist-credit" disabled><span aria-hidden="true">+</span> Send gift</button>
+              </div>
+              <p class="mist-admin-status" id="st-mist-status" role="status" aria-live="polite"></p>
+            </div>
+            <h2>Pending review <span class="count-badge" id="st-pending-count">0</span></h2>
+            <div class="store-queue" id="st-pending"></div>
+            <h2>Reports <span class="count-badge" id="st-reports-count">0</span></h2>
+            <div class="store-queue" id="st-reports"></div>
+          </div>
+        </div>
+      </div>
+      <div class="store-modal" id="st-report-modal" hidden>
+        <div class="store-modal-card" role="dialog" aria-label="Report wallpaper">
+          <h3>Report wallpaper</h3>
+          <p id="st-report-name"></p>
+          <label class="field">
+            <span>Reason</span>
+            <select id="st-report-reason">
+              <option>Inappropriate content</option>
+              <option>Spam or misleading</option>
+              <option>Copyright violation</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <div class="store-modal-actions">
+            <button type="button" class="player-btn" id="st-report-cancel">Cancel</button>
+            <button type="button" class="player-btn transport-play" id="st-report-send">Send report</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="window indexy-win" id="indexy-window" hidden aria-label="Indexy">
+      <div class="titlebar" id="indexy-titlebar">
+        <div class="traffic">
+          <button type="button" class="tl close" id="ix-close" aria-label="Close"></button>
+          <button type="button" class="tl min" id="ix-min" aria-label="Minimize"></button>
+          <button type="button" class="tl max" id="ix-max" aria-label="Zoom"></button>
+        </div>
+        <div class="indexy-head">
+          <strong>Indexy</strong>
+          <span id="ix-status">No project loaded</span>
+        </div>
+        <div class="indexy-actions">
+          <button type="button" class="ix-btn icon" id="ix-back" aria-label="Go back" disabled><img src="images/arrow_back_ios_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png" alt=""></button>
+          <button type="button" class="ix-btn" id="ix-open-files">Open files</button>
+          <button type="button" class="ix-btn" id="ix-open-folder">Open folder</button>
+          <button type="button" class="ix-btn run" id="ix-run">▶ Run</button>
+          <button type="button" class="ix-btn" id="ix-clear">Clear</button>
+        </div>
+      </div>
+      <div class="win-body">
+        <div class="indexy-view">
+          <aside class="indexy-side" aria-label="Project files">
+            <div class="indexy-side-head">Files <span id="ix-count">0</span></div>
+            <ul class="ix-list" id="ix-list"></ul>
+            <div class="indexy-hint">Drop files or a folder anywhere in this window — or pick just an <code>index.html</code> to run it solo.</div>
+          </aside>
+          <div class="indexy-main">
+            <div class="indexy-empty" id="ix-empty">
+              <div class="indexy-empty-art" aria-hidden="true"><span class="indexy-art big"><span class="indexy-play"></span></span></div>
+              <h2>Run your project</h2>
+              <p>Load an <code>index.html</code> with its <code>style.css</code> and <code>script.js</code> and preview the site right here.</p>
+              <button type="button" class="ix-btn run big" id="ix-empty-open">Choose files…</button>
+            </div>
+            <iframe class="ix-frame" id="ix-frame" title="Preview" sandbox="allow-scripts allow-modals allow-forms allow-popups" hidden></iframe>
+            <div class="ix-editor" id="ix-editor" hidden>
+              <div class="ix-editor-bar">
+                <span class="ix-edit-name" id="ix-edit-name">script.js</span>
+                <span class="ix-dirty" id="ix-dirty" hidden>● edited</span>
+                <span class="ix-save-hint">Ctrl+S to download</span>
+              </div>
+              <div class="ix-editor-body">
+                <div class="ix-gutter" id="ix-gutter" aria-hidden="true">1</div>
+                <textarea id="ix-textarea" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
+              </div>
+            </div>
+            <div class="ix-imgview" id="ix-imgview" hidden><img id="ix-img" alt="Image preview"></div>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="ix-file-input" multiple hidden>
+      <input type="file" id="ix-folder-input" hidden webkitdirectory>
+    </section>
+    <div class="spotlight" id="spotlight" hidden>
+      <div class="spot-top">
+        <label class="spot-pill">
+          <svg class="search-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="text" id="spot-input" aria-label="Spotlight Search" autocomplete="off" spellcheck="false">
+          <span class="spot-ph" id="spot-ph" aria-hidden="true">Spotlight Search</span>
+          <span class="spot-caret" id="spot-caret" aria-hidden="true"></span>
+        </label>
+        <button type="button" class="spot-circle" id="spot-paste" aria-label="Paste from clipboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.6 4.6H6.8A1.8 1.8 0 0 0 5 6.4v12.8a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8V6.4a1.8 1.8 0 0 0-1.8-1.8h-1.8"/><rect x="8.6" y="2.9" width="6.8" height="3.4" rx="1.2"/><path d="M9 12.4h6M9 15.9h3.7"/></svg></button>
+        <button type="button" class="spot-circle" id="spot-settings" aria-label="Open Settings"><svg viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M19.1 12.9a7.7 7.7 0 0 0 0-1.8l2-1.6a.5.5 0 0 0 .1-.6l-1.9-3.3a.5.5 0 0 0-.6-.2l-2.4 1a7.6 7.6 0 0 0-1.6-.9l-.4-2.6a.5.5 0 0 0-.5-.4h-3.8a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.1.5-1.6.9l-2.4-1a.5.5 0 0 0-.6.2L2.7 9a.5.5 0 0 0 .1.6l2 1.6a7.7 7.7 0 0 0 0 1.8l-2 1.6a.5.5 0 0 0-.1.6l1.9 3.3c.1.2.4.3.6.2l2.4-1c.5.4 1 .7 1.6.9l.4 2.6c0 .2.2.4.5.4h3.8c.3 0 .5-.2.5-.4l.4-2.6c.6-.2 1.1-.5 1.6-.9l2.4 1c.2.1.5 0 .6-.2l1.9-3.3a.5.5 0 0 0-.1-.6ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg></button>
+        <button type="button" class="spot-circle" id="spot-power" aria-label="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="3.5" x2="12" y2="11"/><path d="M6.2 6.3a8 8 0 1 0 11.6 0"/></svg></button>
+      </div>
+      <div class="spot-results" id="spot-results" role="listbox" aria-label="Results"></div>
+    </div>
+    <input type="file" id="wall-input" accept="image/*" multiple hidden>
+    <div class="ctxmenu" id="ctxmenu" hidden>
+      <div class="ctx-title" id="ctx-title">Window</div>
+      <button type="button" class="ctx-item" data-act="max">Zoom</button>
+      <button type="button" class="ctx-item" data-act="min">Minimize</button>
+      <button type="button" class="ctx-item danger" data-act="close">Close Window</button>
+      <div class="ctx-sep"></div>
+      <div class="ctx-label">Switch to</div>
+      <div id="ctx-wins"></div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="haze-notif" id="haze-notif" role="status" aria-live="polite" hidden>
+      <span class="haze-notif-ico" aria-hidden="true"><img src="images/haze.svg" alt=""></span>
+      <div class="haze-notif-text">
+        <span class="haze-notif-meta"><span class="haze-notif-app">Haze</span><span class="haze-notif-time" id="haze-notif-time">now</span></span>
+        <strong id="haze-notif-title">Welcome to Haze</strong>
+        <span id="haze-notif-sub">Signed in</span>
+      </div>
+      <button type="button" class="haze-notif-close" id="haze-notif-close" aria-label="Dismiss notification">×</button>
+      <span class="haze-notif-bar" id="haze-notif-bar" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <script src="script.js?v=15"></script>
+</body>
+</html>

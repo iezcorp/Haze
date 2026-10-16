@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Haze Shop — preview</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    padding: 32px;
+    box-sizing: border-box;
+    background: radial-gradient(130% 120% at 18% 0%, #2b2542 0%, #141120 55%, #0d0b15 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  /* The real window is fixed-centred; pin it for a clean desktop-width shot. */
+  #store-window {
+    position: static;
+    transform: none;
+    width: 1040px;
+    height: 700px;
+    display: flex;
+  }
+  .preview-note {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.42);
+    font: 12px var(--font);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+  <section class="window store-win" id="store-window" aria-label="Shop">
+    <div class="titlebar" id="store-titlebar">
+      <div class="traffic">
+        <button type="button" class="tl close" aria-label="Close"></button>
+        <button type="button" class="tl min" aria-label="Minimize"></button>
+        <button type="button" class="tl max" aria-label="Zoom"></button>
+      </div>
+      <div class="store-head">
+        <strong>Shop</strong>
+        <span id="st-status">Wallpapers</span>
+      </div>
+    </div>
+    <div class="win-body store-body">
+      <aside class="store-side" aria-label="Shop sections">
+        <div class="store-brand">
+          <img class="store-brand-mark" src="../images/haze.svg" alt="" aria-hidden="true">
+          <span class="store-brand-text"><strong>Haze</strong><em>Shop</em></span>
+        </div>
+        <p class="store-nav-label">Browse</p>
+        <button type="button" class="store-nav active" data-view="appearance"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17.5 9.5 12.5l3.5 3.5 2.5-2.5 4 4"/></svg>Appearance</button>
+        <button type="button" class="store-nav" data-view="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9Z"/></svg>Community Favorites</button>
+        <button type="button" class="store-nav" data-view="decorations"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.1 5.7L20 11l-5.9 2.3L12 19l-2.1-5.7L4 11l5.9-2.3L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg>Avatar Decorations</button>
+        <p class="store-nav-label">Contribute</p>
+        <button type="button" class="store-nav" data-view="upload"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M4 20h16"/></svg>Upload</button>
+        <button type="button" class="store-nav admin-only" data-view="admin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6Z"/><path d="M9.5 12l2 2 3.5-4"/></svg>Admin</button>
+        <p class="store-side-foot">Uploads are scanned and reviewed before they appear in the Shop.</p>
+      </aside>
+      <div class="store-main">
+        <div class="store-toolbar" id="st-toolbar">
+          <label class="search-field" id="st-search-field">
+            <svg class="search-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="11.2" y1="11.2" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="search" id="st-search" placeholder="Search wallpapers" aria-label="Search wallpapers" autocomplete="off">
+            <span class="caret" id="st-search-caret" aria-hidden="true"></span>
+          </label>
+        </div>
+        <div class="store-view" id="st-view-appearance">
+          <div class="store-section-head"><h3>Icon packs</h3></div>
+          <p class="store-hint">Install a pack to restyle the dock app icons.</p>
+          <div class="pack-row store-packs" id="st-pack-row"></div>
+          <div class="store-section-head wall-head"><h3>Wallpapers</h3></div>
+          <div class="store-grid" id="st-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <p class="preview-note">Haze Shop — layout preview</p>
+
+<script>
+const ICON_HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9Z"/></svg>';
+const ICON_DOWNLOAD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>';
+const ICON_FLAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 5h11l-2.5 3.5L17 12H6"/></svg>';
+
+function thumb(c1, c2) {
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'>" +
+    "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>" +
+    "<stop offset='0' stop-color='" + c1 + "'/><stop offset='1' stop-color='" + c2 + "'/>" +
+    "</linearGradient></defs><rect width='320' height='180' fill='url(%23g)'/></svg>";
+  return "data:image/svg+xml," + svg.replace(/#/g, "%23").replace(/"/g, "'");
+}
+
+function card(it) {
+  return '<article class="store-card">' +
+    '<div class="store-thumb">' +
+      '<img src="' + thumb(it.a, it.b) + '" alt="">' +
+      '<span class="store-kind">' + it.kind + '</span>' +
+    '</div>' +
+    '<div class="store-meta">' +
+      '<div class="store-name">' + it.name + '</div>' +
+      '<div class="store-sub"><span class="store-ava" aria-hidden="true">' + it.author[0].toUpperCase() + '</span><span class="store-author">' + it.author + '</span></div>' +
+      '<div class="store-actions">' +
+        '<button type="button" class="store-btn primary">Download</button>' +
+        '<button type="button" class="like-btn' + (it.liked ? " liked" : "") + '" aria-label="Like">' + ICON_HEART + '<span>' + it.likes + '</span></button>' +
+        '<a class="icon-btn" href="#" aria-label="Download file" title="Download file">' + ICON_DOWNLOAD + '</a>' +
+        '<button type="button" class="icon-btn" aria-label="Report" title="Report">' + ICON_FLAG + '</button>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+
+function section(title, count, items, cls) {
+  return '<div class="store-section">' +
+    '<div class="store-section-head' + (cls ? " " + cls : "") + '"><h3>' + title + '</h3><span>' + count + '</span></div>' +
+    '<div class="store-grid">' + items.map(card).join("") + '</div>' +
+  '</div>';
+}
+
+const community = [
+  { name: "Neon Dusk", author: "mira", kind: "IMAGE", likes: 42, liked: true, a: "#ff8a5b", b: "#c94b93" },
+  { name: "Low Tide", author: "kovacs", kind: "IMAGE", likes: 17, a: "#4f8cff", b: "#123a6b" },
+  { name: "Paper Lanterns", author: "irie", kind: "IMAGE", likes: 31, a: "#ffd479", b: "#ff6b6b" },
+  { name: "Fern & Fog", author: "juno", kind: "VIDEO", likes: 8, a: "#63d4a5", b: "#1f5f4a" },
+];
+const included = [
+  { name: "Haze", author: "Haze", kind: "IMAGE", likes: 12, a: "#7db4ff", b: "#be8cff" },
+  { name: "Grain", author: "Haze", kind: "IMAGE", likes: 5, a: "#3a3f4b", b: "#14161c" },
+  { name: "Blossom", author: "Haze", kind: "IMAGE", likes: 9, a: "#ffb3d1", b: "#a86bff" },
+];
+const solids = [
+  { name: "Ink", author: "Haze", kind: "THEME", likes: 2, a: "#1b1b24", b: "#1b1b24" },
+  { name: "Mist", author: "Haze", kind: "THEME", likes: 1, a: "#cfd6e6", b: "#cfd6e6" },
+];
+
+document.getElementById("st-grid").innerHTML =
+  section("Community", community.length + " items", community) +
+  section("Included", included.length + " items", included) +
+  section("Solid colors", solids.length + " items", solids);
+
+const packs = [
+  { name: "Haze Classic", desc: "The original gradient icons", a: "#7db4ff", b: "#be8cff", active: true },
+  { name: "Mono", desc: "Quiet, single-tone glyphs", a: "#9aa3b2", b: "#5c6472" },
+  { name: "Vapor", desc: "Neon frames and glow", a: "#ff7ac6", b: "#7a5cff" },
+];
+document.getElementById("st-pack-row").innerHTML = packs.map((p) =>
+  '<div class="pack-card' + (p.active ? " active" : "") + '">' +
+    '<div class="pack-previews" aria-hidden="true">' +
+      [0,1,2,3].map((i) => '<span class="pack-mini"><img src="' + thumb(p.a, p.b) + '" alt="" style="opacity:' + (1 - i * 0.18) + '"></span>').join("") +
+    '</div>' +
+    '<div class="pack-info"><strong>' + p.name + '</strong><span>' + p.desc + '</span></div>' +
+    '<button type="button" class="player-btn pack-cta"' + (p.active ? " disabled" : "") + '>' + (p.active ? "Installed" : "Install") + '</button>' +
+  '</div>'
+).join("");
+document.getElementById("st-status").textContent = "9 wallpapers";
+
+// Let the preview tabs replay the same logo animation as the real Shop.
+document.querySelectorAll(".store-nav").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("active")) return;
+    document.querySelectorAll(".store-nav").forEach((b) => b.classList.toggle("active", b === btn));
+    const mark = document.querySelector(".store-brand-mark");
+    mark.classList.remove("tab-in");
+    void mark.offsetWidth;
+    mark.classList.add("tab-in");
+  })
+);
+</script>
+</body>
+</html>

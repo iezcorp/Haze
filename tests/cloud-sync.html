@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloud Sync — Persistence Test Harness</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 16px; background: #0b0a12; color: #eee; }
+  h2 { margin-top: 0; }
+  #output { line-height: 1.5; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: #12111a; padding: 12px; border-radius: 8px; overflow: auto; max-height: 70vh; }
+  .pass { color: #7ed957; }
+  .fail { color: #ff5f57; }
+  .info { color: #9fb3d8; }
+  .section { margin-top: 18px; }
+  button { margin: 6px 6px 6px 0; padding: 6px 12px; cursor: pointer; }
+  .hint { color: #888; font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h2>Cloud Sync — Persistence &amp; Account-Isolation Tests</h2>
+<p class="hint">Run this file in a real browser. It loads <code>../script.js</code> with a stubbed DOM and a stubbed
+<code>fetch</code> that mimics Supabase, then verifies that profile pictures, banners, and settings persist to (and load from)
+the authenticated account instead of localStorage only.</p>
+
+<div id="output">Loading script.js &hellip;</div>
+
+<!-- Minimal DOM stubs so script.js can initialise without crashing. -->
+<div id="dock"></div>
+<input id="spot-input">
+<div id="settings-window"></div>
+<div id="settings-accent"><button data-accent="purple"></button><button data-accent="white"></button></div>
+<input id="dim-slider"><span id="dim-val"></span>
+<input id="ui-scale"><span id="scale-val"></span>
+<input id="titlebar-size"><span id="titlebar-val"></span>
+<input id="dock-size"><span id="dock-size-val"></span>
+<div id="dock-pos"><button data-pos="bottom"></button><button data-pos="left"></button><button data-pos="right"></button></div>
+<div id="clock"></div>
+<div id="wall-swatches"></div><div id="wall-thumbs"></div>
+<div id="batt-fill"></div><div id="batt-pct"></div>
+<div id="desk-time"></div><div id="desk-date"></div>
+<video id="wallpaper-video"></video>
+<div id="auth-view"></div><div id="desktop"></div><div id="stage"></div><div id="toast"></div>
+
+<script>
+// Tiny assert runner.
+const results = [];
+function assert(condition, name) {
+  results.push({ name, pass: !!condition });
+  const line = (condition ? "PASS" : "FAIL") + " — " + name;
+  console.log(line);
+}
+function render() {
+  const out = document.getElementById("output");
+  let html = "";
+  let fails = 0;
+  results.forEach((r) => {
+    if (!r.pass) fails++;
+    html += `<span class="${r.pass ? "pass" : "fail"}">${r.pass ? "✔" : "✗"}</span> ${r.name}<br>`;
+  });
+  html += `<hr><span class="${fails === 0 ? "pass" : "fail"}">${results.length - fails}/${results.length} tests passed</span>`;
+  out.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Stub fetch to mimic Supabase REST + storage for the cloud tests.
+// ---------------------------------------------------------------------------
+const BASE = "https://ynahfyalawhirzvgnraz.supabase.co";
+const STORED = {}; // in-memory "database" keyed by table/url
+const STORAGE_OBJS = {}; // bucket/path -> { url }
+
+window.fetch = async (input, init = {}) => {
+  const url = String(input);
+  const method = (init.method || "GET").toUpperCase();
+  const headers = init.headers || {};
+  const token = headers.Authorization;
+
+  // ---------- Storage (avatars / banners) ----------
+  const storageMatch = url.match(/\/storage\/v1\/object\/(avatars|banners)(?:\/(.+))?/);
+  if (storageMatch) {
+    const bucket = storageMatch[1];
+    const path = storageMatch[2] || "";
+    if (method === "POST") {
+      STORAGE_OBJS[bucket + "/" + path] = { contentType: headers["Content-Type"], size: (init.body && init.body.size) || 0 };
+      return new Response(null, { status: 200 });
+    }
+    if (method === "DELETE") {
+      delete STORAGE_OBJS[bucket + "/" + path];
+      return new Response(null, { status: 200 });
+    }
+    return new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } });
+  }
+
+  // ---------- REST ----------
+  const restMatch = url.match(/\/rest\/v1\/(\w+)([?].*)?$/);
+  const table = restMatch && restMatch[1];
+  const qs = restMatch && restMatch[2] || "";
+
+  if (table === "profiles") {
+    if (method === "POST") {
+      // upsert by id
+      const body = JSON.parse(init.body || "{}");
+      STORED.profiles = STORED.profiles || {};
+      STORED.profiles[body.id] = Object.assign(STORED.profiles[body.id] || {}, body);
+      return new Response(JSON.stringify([STORED.profiles[body.id]]), { status: 200, headers: {"Content-Type":"application/json"}});
+    }
+    if (method === "PATCH") {
+      // id=eq.<id>
+      const m = qs.match(/id=eq\.([^&]+)/);
+      const id = m && decodeURIComponent(m[1]);
+      STORED.profiles = STORED.profiles || {};
+      if (id && STORED.profiles[id]) {
+        const body = JSON.parse(init.body || "{}");
+        Object.assign(STORED.profiles[id], body);
+        return new Response(JSON.stringify([STORED.profiles[id]]), { status: 200, headers: {"Content-Type":"application/json"}});
+      }
+      return new Response(JSON.stringify([]), { status: 200, headers: {"Content-Type":"application/json"}});
+    }
+    if (method === "GET") {
+      const m = qs.match(/id=eq\.([^&]+)/);
+      const id = m && decodeURIComponent(m[1]);
+      const rows = STORED.profiles ? Object.values(STORED.profiles).filter((p) => !id || p.id === id) : [];
+      return new Response(JSON.stringify(rows), { status: 200, headers: {"Content-Type":"application/json"}});
+    }
+  }
+
+  if (table === "mist_wallets") {
+    if (method === "GET") {
+      const m = qs.match(/user_id=eq\.([^&]+)/);
+      const uid = m && decodeURIComponent(m[1]);
+      const rows = STORED.mist_wallets ? Object.values(STORED.mist_wallets).filter((w) => !uid || w.user_id === uid) : [];
+      return new Response(JSON.stringify(rows), { status: 200, headers: {"Content-Type":"application/json"}});
+    }
+    return new Response(null, { status: 204 });
+  }
+
+  return new Response(JSON.stringify({ error: "not stubbed: " + url }), { status: 404, headers: {"Content-Type":"application/json"}});
+};
+
+window.SUPABASE_CONFIG = { url: BASE, anonKey: "test-anon-key" };
+window.supaBase = () => BASE;
+
+// ---------------------------------------------------------------------------
+// Load the real script.js
+// ---------------------------------------------------------------------------
+const s = document.createElement("script");
+s.src = "../script.js";
+s.onload = () => {
+  document.getElementById("output").textContent = "script.js loaded. Running tests&hellip;";
+  setTimeout(runTests, 150);
+};
+s.onerror = () => { document.getElementById("output").textContent = "FAILED to load ../script.js"; };
+document.head.appendChild(s);
+
+async function runTests() {
+  const { cloudOn, readSupaSession, loadCloudProfile, syncPrefsToCloud,
+          avatarPathFromUrl, bannerPathFromUrl, savePrefs } = window;
+  const prefs = window.__hazePrefs;
+
+  // ---------- Pure path helpers ----------
+  const prefixA = BASE + "/storage/v1/object/public/avatars/";
+  const prefixB = BASE + "/storage/v1/object/public/banners/";
+  assert(avatarPathFromUrl(prefixA + "550e8400-e29b/abc-avatar.jpg") === "550e8400-e29b/abc-avatar.jpg", "avatarPathFromUrl extracts object path");
+  assert(avatarPathFromUrl("https://example.com/other.jpg") === "", "avatarPathFromUrl returns '' for non-storage URL");
+  assert(avatarPathFromUrl("") === "", "avatarPathFromUrl handles empty string");
+  assert(bannerPathFromUrl(prefixB + "550e8400-e29b/xyz-banner.png") === "550e8400-e29b/xyz-banner.png", "bannerPathFromUrl extracts object path");
+  assert(bannerPathFromUrl(prefixA + "550e8400-e29b/abc-avatar.jpg") === "", "bannerPathFromUrl returns '' for avatars URL");
+
+  // ---------- Cloud profile load ----------
+  const meId = "550e8400-e29b-41d4-a716-446655440001";
+  const meEmail = "alice@example.com";
+  const session = { token: "fake-token", user: { id: meId, email: meEmail } };
+
+  // Pre-seed a profile row via the stubbed storage path (simulates a prior registerProfile).
+  // We can't call supaRest easily, so directly seed STORED via fetch POST.
+  await fetch(BASE + "/rest/v1/profiles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: meId, email: meEmail, avatar_url: prefixA + meId + "/a1.jpg", banner_url: prefixB + meId + "/b1.jpg", settings: { dim: 30, dockPosition: "left" } }),
+  });
+
+  const profile = await loadCloudProfile(session);
+  assert(profile.id === meId, "loadCloudProfile returns user id");
+  assert(profile.avatarUrl === prefixA + meId + "/a1.jpg", "loadCloudProfile returns avatarUrl from cloud");
+  assert(profile.bannerUrl === prefixB + meId + "/b1.jpg", "loadCloudProfile returns bannerUrl from cloud");
+  assert(prefs.dim === 30, "cloud settings merged into prefs (dim=30)");
+  assert(prefs.dockPosition === "left", "cloud settings merged into prefs (dockPosition=left)");
+
+  // ---------- Settings sync to cloud ----------
+  localStorage.setItem("glass.supa.session", JSON.stringify({ token: "fake-token", user: { id: meId, email: meEmail } }));
+  window.__hazeCurrentUser = { email: meEmail, id: meId };
+  prefs.dim = 42;
+  prefs.dockPosition = "right";
+  await syncPrefsToCloud();
+  // Verify PATCH reached the stubbed "database".
+  const patched = STORED.profiles && STORED.profiles[meId];
+  assert(patched && patched.settings && patched.settings.dim === 42, "syncPrefsToCloud PATCHes settings.dim to cloud");
+  assert(patched && patched.settings && patched.settings.dockPosition === "right", "syncPrefsToCloud PATCHes settings.dockPosition to cloud");
+
+  // ---------- Account isolation: different user gets different profile ----------
+  const otherId = "aaaaaaaa-1111-41d4-a716-446655440002";
+  const otherSession = { token: "fake-token-2", user: { id: otherId, email: "bob@example.com" } };
+  await fetch(BASE + "/rest/v1/profiles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: otherId, email: "bob@example.com", avatar_url: prefixA + otherId + "/bob-avatar.jpg", banner_url: "", settings: {} }),
+  });
+  const otherProfile = await loadCloudProfile(otherSession);
+  assert(otherProfile.avatarUrl === prefixA + otherId + "/bob-avatar.jpg", "account isolation: Bob loads his own avatar, not Alice's");
+  assert(otherProfile.bannerUrl === "", "account isolation: Bob's banner is empty (not Alice's)");
+  assert(prefs.dim === 42, "account isolation: loading Bob's empty settings did NOT clobber Alice's dim (no empty-default overwrite)");
+  assert(prefs.dockPosition === "right", "account isolation: loading Bob's empty settings did NOT clobber dockPosition");
+
+  // ---------- Settings save without cloud data does not wipe cloud ----------
+  // If cloud has settings and local equals defaults, cloud must win on load.
+  assert(prefs.dim === 42, "local dim is 42 (set above)");
+
+  render();
+};
+</script>
+</body>
+</html>
