@@ -11,7 +11,7 @@
   --radius-field: 16px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
           "Helvetica Neue", "Segoe UI", sans-serif;
-  --ease: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);
   --dim: 0.18;
   --ui-scale: 0.95;
   --titlebar-size: 44px;
@@ -175,7 +175,7 @@ h1 {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.22);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: transform 0.5s var(--ease);
+  transition: transform 0.6s var(--ease);
 }
 
 .segmented[data-mode="signup"] .thumb { transform: translateX(100%); }
@@ -192,9 +192,9 @@ form { display: grid; gap: 16px; }
   margin-top: -16px; /* cancels the form gap while collapsed */
   opacity: 0;
   transition:
-    grid-template-rows 0.7s var(--ease),
-    margin-top 0.7s var(--ease),
-    opacity 0.45s var(--ease);
+    grid-template-rows 0.8s var(--ease),
+    margin-top 0.8s var(--ease),
+    opacity 0.5s var(--ease);
 }
 
 .reveal.open {
@@ -207,11 +207,11 @@ form { display: grid; gap: 16px; }
 .reveal-inner { min-height: 0; overflow: hidden; }
 
 /* Once fully open, let the focus glow spill outside the box */
-.reveal.open.settled .reveal-inner { overflow: visible; }
+.reveal.open.settled .reveal-inner { overflow: visible; transition: overflow 0s 0.8s; }
 
 .reveal .field {
   transform: translateY(-14px);
-  transition: transform 0.7s var(--ease);
+  transition: transform 0.8s var(--ease);
 }
 
 .reveal.open .field { transform: translateY(0); }
@@ -250,6 +250,71 @@ input[aria-invalid="true"] { border-color: var(--error); }
 input:-webkit-autofill {
   -webkit-text-fill-color: #fff;
   transition: background-color 9999s ease-out;
+}
+
+/* ---------- Password field with toggle button ---------- */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.25s var(--ease);
+}
+
+.password-toggle:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.05);
+}
+
+.password-toggle:active {
+  transform: scale(0.95);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.password-toggle .eye-closed {
+  display: none;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.password-toggle.showing .eye-open {
+  display: none;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.password-toggle.showing .eye-closed {
+  display: block;
+  opacity: 1;
+  transform: scale(1);
 }
 
 /* ---------- Messages & buttons ---------- */
@@ -1429,6 +1494,31 @@ body.in-desktop { overflow: hidden; }
 
 .detail-side { min-width: 0; }
 
+.detail-header {
+  margin-bottom: 16px;
+}
+
+.detail-header h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.detail-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .detail-stars {
   display: flex;
   align-items: center;
@@ -1444,6 +1534,30 @@ body.in-desktop { overflow: hidden; }
   font-size: 14.5px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.86);
+}
+
+.detail-section {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.detail-section h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-section p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .detail-controls {
@@ -1520,6 +1634,7 @@ body.in-desktop { overflow: hidden; }
   margin-top: 20px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   padding: 16px 18px;
   border-radius: 14px;
@@ -1530,7 +1645,13 @@ body.in-desktop { overflow: hidden; }
 .emu-card[hidden],
 #game-emu[hidden] { display: none !important; }
 
-.emu-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.emu-header {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 .emu-label {
   font-size: 10.5px;
@@ -1539,6 +1660,18 @@ body.in-desktop { overflow: hidden; }
   text-transform: uppercase;
   color: var(--text-dim);
 }
+
+.emu-header strong { font-size: 14px; font-weight: 600; }
+
+.emu-desc {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.emu-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 
 .emu-info strong { font-size: 14px; font-weight: 600; }
 

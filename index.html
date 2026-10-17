@@ -38,14 +38,38 @@
 
         <label class="field">
           <span>Password</span>
-          <input type="password" id="password" name="password" autocomplete="current-password" placeholder="At least 8 characters" required>
+          <div class="password-wrapper">
+            <input type="password" id="password" name="password" autocomplete="current-password" placeholder="At least 8 characters" required>
+            <button type="button" class="password-toggle" aria-label="Show password">
+              <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
         </label>
 
         <div class="reveal" data-only="signup" inert>
           <div class="reveal-inner">
             <label class="field">
           <span>Confirm password</span>
-          <input type="password" id="confirm" name="confirm" autocomplete="new-password" placeholder="Re-enter your password">
+          <div class="password-wrapper">
+            <input type="password" id="confirm" name="confirm" autocomplete="new-password" placeholder="Re-enter your password">
+            <button type="button" class="password-toggle" aria-label="Show password">
+              <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
         </label>
           </div>
         </div>
@@ -541,11 +565,24 @@
                 <iframe id="detail-trailer" title="Game trailer" allow="autoplay; fullscreen" hidden></iframe>
               </div>
               <div class="detail-side">
-                <div class="detail-stars"><span class="game-stars">★</span><strong id="detail-rating">5.0</strong><span aria-hidden="true">·</span><span id="detail-type">Playable in browser</span></div>
+                <div class="detail-header">
+                  <h2 id="detail-game-title">Game Title</h2>
+                  <div class="detail-meta">
+                    <span class="detail-rating"><span class="game-stars">★</span><strong id="detail-rating">5.0</strong></span>
+                    <span id="detail-type">Playable in browser</span>
+                  </div>
+                </div>
                 <p class="detail-blurb" id="detail-blurb"></p>
-                <div class="detail-controls"><span>How to play</span><p id="detail-hint"></p></div>
-                <div class="emu-card" id="emu-card">
-                  <div class="emu-info"><span class="emu-label">Controls</span><strong>WASD keys</strong><span>Use W A S D instead of the arrow keys. Off by default.</span></div>
+                <div class="detail-section">
+                  <h3>How to play</h3>
+                  <p id="detail-hint"></p>
+                </div>
+                <div class="detail-section emu-card" id="emu-card">
+                  <div class="emu-header">
+                    <span class="emu-label">Controls</span>
+                    <strong>WASD keys</strong>
+                  </div>
+                  <p class="emu-desc">Use W A S D instead of the arrow keys</p>
                   <button type="button" class="emu-toggle" id="detail-emu-toggle" aria-pressed="false" aria-label="Use WASD keys instead of arrow keys"><span class="emu-knob" aria-hidden="true"></span></button>
                 </div>
               </div>

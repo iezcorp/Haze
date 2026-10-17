@@ -150,6 +150,18 @@ const modeSwitch = $("#mode-switch");
 const signupOnly = document.querySelectorAll('[data-only="signup"]');
 const passwordInput = $("#password");
 const settingsWin = $("#settings-window");
+
+// Password toggle functionality
+document.querySelectorAll(".password-toggle").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const wrapper = btn.parentElement;
+    const input = wrapper.querySelector("input");
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    btn.classList.toggle("showing", !isPassword);
+    btn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+  });
+});
 const settingsBtn = dock.querySelector('[data-app="Settings"]');
 const browsyWin = $("#browsy-window");
 const browsyBtn = dock.querySelector('[data-app="Browsy"]');
@@ -428,15 +440,20 @@ function showHome(user, opts = {}) {
     showHazeWelcome(user, kind, opts.sound === true);
   }
   try { gcalRefresh(); } catch { /* calendar must never break login */ }
-  try {
-    const s = driftSession();
-    if (s) {
-      driftEnsureUsername(s).then((handle) => { driftUsername = handle; }).catch(() => { /* Drift warms up on open */ });
-      loadDriftContacts(true).catch(() => { /* Drift warms up on open */ });
-      startDriftNotifyPolling();
-      driftPollIncoming(true).catch(() => { /* notifications are optional */ });
-    }
-  } catch { /* background warm-up must never break login */ }
+  // Initialize Drift with a small delay to ensure session is fully persisted
+  setTimeout(() => {
+    try {
+      const s = driftSession();
+      if (s) {
+        driftEnsureUsername(s).then((handle) => {
+          driftUsername = handle;
+        }).catch(() => { /* Drift warms up on open */ });
+        loadDriftContacts(true).catch(() => { /* Drift warms up on open */ });
+        startDriftNotifyPolling();
+        driftPollIncoming(true).catch(() => { /* notifications are optional */ });
+      }
+    } catch { /* background warm-up must never break login */ }
+  }, 500);
 }
 
 /* ---------- Haze welcome notification (bottom-right + custom chime) ---------- */
@@ -3572,8 +3589,10 @@ function driftSession() {
   if (!secureOrigin) return null;
   const session = readSupaSession();
   if (!session || !session.token || !session.user || !session.user.id) return null;
-  return String(session.user.email || "").trim().toLowerCase() === String(currentUser.email || "").trim().toLowerCase()
-    ? session : null;
+  const sessionEmail = String(session.user.email || "").trim().toLowerCase();
+  const currentUserEmail = String(currentUser.email || "").trim().toLowerCase();
+  if (sessionEmail !== currentUserEmail) return null;
+  return session;
 }
 
 function driftSetStatus(text, error = false) {
@@ -3699,6 +3718,7 @@ function driftNotifyIncoming(senderName) {
   const base = String(senderName || "Someone").replace(/#\d{4}$/, "").trim() || "Someone";
   const name = base.charAt(0).toUpperCase() + base.slice(1);
   showHazeNotif("Drift", name + " has left you a message");
+  playHazeChime();
 }
 
 async function driftPollIncoming(force = false) {
@@ -4652,6 +4672,7 @@ const CONSOLE_META = {
 const GAMES = [
   { id: "subway", title: "Subway Surfers", console: "html5", rating: "4.9", blurb: "Run, jump, dodge trains and collect coins in this endless runner", play: "Games/Subway Surfers/index.html", cover: "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/1c920b9279c2bedec567c1b58129ae8f/subway-surfers-logo.png", hint: "Arrow keys or WASD: Left/Right to switch lanes, Up/Space to jump, Down to slide", wasd: true },
   { id: "stickman-hook", title: "Stickman Hook", console: "html5", blurb: "Swing from hook to hook and race through each level.", play: "Games/Stickman-Hook/index.html", cover: "Games/Stickman-Hook/unnamed.jpg", hint: "Click or tap to hook and release to swing" },
+  { id: "snow-rider-3d", title: "Snow Rider 3D", console: "html5", rating: "4.8", blurb: "Race down endless snowy slopes on your sled, dodge obstacles, and collect gifts to unlock new sleighs", play: "Games/Snow Rider 3D/snowrider.htm", cover: "https://imgs.search.brave.com/toKpTbVdi2z4ywiJjuI4pE2nz9Y3tNdmRfCq5x39Myg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zbm93/cmlkZXIzZC5jb20v/ZGF0YS9pbWFnZS9n/YW1lL3Nub3ctcmlk/ZXItM2QucG5nMS5Q/Tkc", hint: "Arrow keys: Left/Right to steer, Up to jump" },
 ];
 
 let gamesSort = "home";
@@ -5592,6 +5613,7 @@ function showDetail(id) {
   const meta = CONSOLE_META[g.console];
   stopMedia();
   $("#detail-title").textContent = g.title;
+  $("#detail-game-title").textContent = g.title;
   $("#detail-letter").textContent = (g.title.trim()[0] || "?").toUpperCase();
   $("#detail-console").textContent = meta.label.toUpperCase();
   $("#detail-fallback").style.setProperty("--hue", meta.hue);
@@ -5675,6 +5697,15 @@ function refreshGame() {
   }, 60);
 }
 
+function refocusGame() {
+  const frame = $("#game-frame");
+  if (!frame) return;
+  try {
+    frame.focus();
+    if (frame.contentWindow) frame.contentWindow.focus();
+  } catch { /* cross-origin */ }
+}
+
 function stopGame() {
   clearTimeout(playLoadTimer);
   $("#player-fallback").hidden = true;
@@ -5755,7 +5786,10 @@ $("#game-frame").addEventListener("load", () => {
   try { $("#game-frame").focus(); $("#game-frame").contentWindow.focus(); } catch { /* cross-origin */ }
 });
 $("#game-fallback-back").addEventListener("click", () => stopGame());
-$("#game-refresh").addEventListener("click", refreshGame);
+$("#game-refresh").addEventListener("click", () => {
+  refreshGame();
+  setTimeout(refocusGame, 100);
+});
 $("#game-fullscreen").addEventListener("click", () => {
   const frame = $("#game-frame");
   // Try to fullscreen the iframe
@@ -5773,10 +5807,28 @@ $("#game-fullscreen").addEventListener("click", () => {
     // Fallback: maximize the games window
     gamesWin.classList.add("max");
   }
+  setTimeout(refocusGame, 100);
 });
 $("#detail-emu-toggle").addEventListener("click", () => setEmu(!isEmuOn()));
-$("#game-emu").addEventListener("click", () => setEmu(!isEmuOn()));
-$("#game-vol").addEventListener("change", (e) => setGameVol(e.target.value));
+$("#game-emu").addEventListener("click", () => {
+  setEmu(!isEmuOn());
+  setTimeout(refocusGame, 100);
+});
+$("#game-vol").addEventListener("change", (e) => {
+  setGameVol(e.target.value);
+  // Don't refocus after volume change - let the game stay focused on the slider
+});
+$("#game-vol").addEventListener("input", (e) => {
+  setGameVol(e.target.value);
+  // Real-time volume update without refocus
+});
+
+// Refocus game after clicking buttons (but not during slider interaction)
+$("#player-bar").addEventListener("click", (e) => {
+  // Don't refocus if clicking on the volume slider
+  if (e.target.closest('#game-vol')) return;
+  if (playerGameId) setTimeout(refocusGame, 50);
+});
 $("#rev-form").addEventListener("submit", submitReview);
 syncEmuUI();
 syncGameVolUI();
