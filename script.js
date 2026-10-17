@@ -3753,10 +3753,12 @@ async function driftPollIncoming(force = false) {
    reaches the Haze notification. */
 function startDriftNotifyPolling() {
   if (driftNotifTimer) return;
+  // Do an immediate check, then start polling
+  driftPollIncoming(true).catch(() => { /* initial check optional */ });
   driftNotifTimer = setInterval(() => {
-    if (!driftWin.hidden) return;      // the open window checks faster
+    if (!driftWin.hidden) return;      // the open window checks faster via its own timer
     driftPollIncoming(true);
-  }, 12000);
+  }, 5000);  // Reduced from 12000 to 5000 for faster notification
 }
 
 /* The compose box names the person you are writing to. */
